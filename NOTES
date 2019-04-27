@@ -1,0 +1,34 @@
+a chess game is automatically drawn if there are 50 moves without a pawn move or capture
+there are 96 possible pawn moves and 30 possible captures
+(notwithstanding the fact that it is impossible to get all of the pawn moves in without also doing a pawn move that is a capture)
+so the longest possible game is shorter than 126*50 moves
+=6300 moves
+a move has a turn for each player, so 12600 turns
+= 1 turn every 7 seconds, if we want to encode the time of day
+and that's if we can achieve the longest possible game
+ah, you can *claim* a draw after 50 moves, but it's only *automatically* drawn after 75
+so 18900 turns, = every 4.6 seconds
+
+every 5 seconds is the best we can possibly do. = 17280 turns
+
+Heuristics:
+ - make a capture or pawn move every 74 moves, and no more frequently
+   - if movenumber%74 == 0:
+     - if we're white, and (movenumber/74)%2 == 0: pawn move or capture, or backtrack if there is none
+     - if we're black, and (movenumber/74)%2 == 1: pawn move or capture, or backtrack if there is none
+   - else:
+     - if there is no legal move that is not a pawn move or capture, backtrack
+ - never capture a pawn
+ - only capture with a pawn if it creates a passed pawn
+ - always capture with a pawn if you can create a passed pawn
+ - never repeat (hashtable of fen? zobrist?)
+
+Other things that would be good:
+ - don't enter any position where there is a forced mate...
+ - ...but deliver checkmate on the very last turn (black's turn on move 8640)
+ - try to avoid a significant material imbalance
+ - try to avoid hanging pieces, will probably be impossible if we maintain the "only capture every 74 moves" aim
+
+Let's start with trying to get a game that can have 1 position per minute, = 720 turns
+
+Program should always output the PGN for the longest known game 
