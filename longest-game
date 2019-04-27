@@ -7,28 +7,39 @@ use Chess::Rep;
 use Storable qw(dclone);
 use List::Util qw(shuffle);
 
+$| = 1;
+
 my $game = Chess::Rep->new();
 
+my $ever_reached_4320 = 0;
 my $longest_game = 0;
 my $observed_fen = {};
-$observed_fen->{$game->get_fen} = 1;
+$observed_fen->{simple_fen($game)} = 1;
+my $lastprint = 0;
 
-dfs($game, "", 1);
+$game->go_move($_) for qw(d4 Nf6 Bf4 d5 Nf3);
+dfs($game, "1. d4 Nf6 2. Bf4 d5 3. Nf3 ", 3);
 
 sub dfs {
     my ($orig_game, $moves_str, $nmoves) = @_;
+
+    return if $nmoves > 4320;
 
     # on white's move, append move number
     my $is_white = 0;
     if ($orig_game->to_move) {
         $is_white = 1;
-        $moves_str .= "$nmoves. ";
         $nmoves++;
+        $moves_str .= "$nmoves. ";
+        $ever_reached_4320 = 1 if $nmoves == 4320;
     }
 
     if ($nmoves > $longest_game) {
-        print "$moves_str\n";
         $longest_game = $nmoves;
+    }
+    if (time - $lastprint > 3 && !$ever_reached_4320) {
+        print "$moves_str\n";
+        $lastprint = time;
     }
 
     my @moves = shuffle legal_moves($orig_game);
@@ -36,19 +47,28 @@ sub dfs {
     while (my $move = shift @moves) {
         my $game = dclone($orig_game);
 
-        $game->go_move($move);
-        my $fen = $game->get_fen;
+        my $san = $game->go_move($move)->{san};
+        my $fen = simple_fen($game);
         next if $observed_fen->{$fen}; # never repeat
 
-        my $san = move_to_san($orig_game, $move);
+        next if $game->status->{stalemate}; # don't stalemate
+        print "MATE AT $nmoves\n" if $game->status->{mate};
+
+        #$san = move_to_san($game, $san, $move);
+
+        next if $nmoves == 4320 && $san !~ /#/; # try to checkmate at the end
+        if ($nmoves == 4320) {
+            print "$moves_str$san\n";
+        }
+        next if $nmoves != 4320 && $san =~ /#/; # only checkmate exactly at the end
         my $is_capture = ($san =~ /x/ ? 1 : 0);
-        my $is_pawn_move = 0; # TODO
-        my $want_capture = ($nmoves%74 == 0) && ((($nmoves/74)%2) == $is_white);
-        next if ($is_capture || $is_pawn_move) != $want_capture; # we only want to capture to avoid the 75-move draw
+        my $is_pawn_move = ($san =~ /^[a-h]/ ? 1 : 0);
+        my $want_capture_or_pawn_move = ($nmoves%74 == 0) && ((($nmoves/74)%2) == $is_white);
+        next if ($nmoves < 4260) && ($is_capture || $is_pawn_move) != $want_capture_or_pawn_move; # we only want to avoid the 75-move draw
 
         $observed_fen->{$fen} = 1;
-        dfs($game, $moves_str . move_to_san($orig_game, $move) . " ", $nmoves);
-        delete $observed_fen->{$fen};
+        dfs($game, "$moves_str$san ", $nmoves);
+        delete $observed_fen->{$fen} unless $ever_reached_4320;
     }
 }
 
@@ -66,11 +86,11 @@ sub legal_moves {
         my $from = lc Chess::Rep::get_field_id($m->{from});
         my $to = lc Chess::Rep::get_field_id($m->{to});
 
-        my $newgame = dclone($game);
-        $newgame->go_move("$from-$to");
+        if ($to =~ /[81]/ && ($game->get_piece_at($from) & 0x1)) {
+            $to .= 'q';
+        }
 
-        # don't accept moves that end the game
-        next if $newgame->status->{mate} || $newgame->status->{stalemate};
+        next if ($game->get_piece_at($from) & 0x1) && ($game->get_piece_at($to) & 0x1); # don't capture pawns
 
         push @legal_moves, "$from-$to";
     }
@@ -79,15 +99,12 @@ sub legal_moves {
 }
 
 sub move_to_san {
-    my ($game, $move) = @_;
-
-    my $newgame = dclone($game);
-    my $san = $newgame->go_move($move)->{san};
+    my ($game, $san, $move) = @_;
 
     my ($from, $to) = split /-/, $move;
 
     # if this is a pawn moving to the final rank, promote it
-    if ($to =~ /[81]/ && ($newgame->get_piece_at($to) & 0x1)) {
+    if ($to =~ /[81]/ && ($game->get_piece_at($to) & 0x1)) {
         my $append = '';
         $append = '#' if $san =~ /#/;
         $append = '+' if $san =~ /\+/;
@@ -98,4 +115,12 @@ sub move_to_san {
     } else {
         return $san;
     }
+}
+
+sub simple_fen {
+    my ($game) = @_;
+
+    my $fen = $game->get_fen;
+    $fen =~ s/ .*//; # strip everything after the board position
+    return $fen;
 }

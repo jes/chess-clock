@@ -11,6 +11,12 @@ so 18900 turns, = every 4.6 seconds
 
 every 5 seconds is the best we can possibly do. = 17280 turns
 
+
+an amusing consequence of only moving the pawns every 74 moves is that the first 74 moves just involve moving the knights around the board randomly, and shuffling the rooks back and forth
+because all the other pieces are hemmed in by pawns which aren't allowed to move
+
+Peter suggested doing a pawn-move-or-capture every 45 moves so that it aligns with 15 minute boundaries
+
 Heuristics:
  - make a capture or pawn move every 74 moves, and no more frequently
    - if movenumber%74 == 0:
@@ -32,3 +38,5 @@ Other things that would be good:
 Let's start with trying to get a game that can have 1 position per minute, = 720 turns
 
 Program should always output the PGN for the longest known game 
+
+Can we have it play a known opening for the first few moves?
