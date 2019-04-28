@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+# take in a pgn-formatted game and output a tsv describing each move:
+# halfmove [tab] SAN [tab] from-to [tab] FEN
+
+use strict;
+use warnings;
+
+use Chess::Rep;
+
+my $pgn = join('', <>);
+$pgn =~ s/\s*$//;
+
+my @moves = grep { $_ !~ /\./ } split /\s+/, $pgn;
+
+my $halfturn = 1;
+my $game = Chess::Rep->new();
+for my $san (@moves) {
+    my $done = $game->go_move($san);
+    $done->{promote} ||= '';
+    my $fromto = lc "$done->{from}-$done->{to}$done->{promote}";
+    my $fen = $game->get_fen;
+    print "$halfturn\t$san\t$fromto\t$fen\n";
+    $halfturn++;
+}
