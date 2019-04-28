@@ -8,15 +8,28 @@
 <body>
 <div class="container">
 <h1>Chess Clock</h1>
+
+<div style="float:left; border-right:solid 1px #ccc; padding-right:5px; margin-right:20px; max-width:505px">
 <span style="font-size:1.2em; font-weight:bold" id="hms"></span>
 <div id="board" style="width:500px"></div>
-(next move in <span id="nextmove"></span> <span id="seconds"></span>)
+<span id="san"></span><br>
+(next <span id="move"></span> in <span style="font-weight: bold" id="nextmove"></span> <span id="seconds"></span>)
+</div>
+
+<div>
+<p>This chess board is a clock. Each position uniquely encodes a time of day, to the nearest 10 seconds.</p>
+
+<p>Both players avoid bringing the game to an early conclusion, and the game encodes the entire 24 hour period, resetting
+to the starting position every day at 00:00:00.</p>
+</div>
+
 </div>
 
 <script src="js/jquery-3.4.0.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/chessboard-0.3.0.min.js"></script>
 <script src="js/fens.js"></script>
+<script src="js/sans.js"></script>
 <script type="text/javascript">
     let board = ChessBoard('board', 'start');
     function redraw(use_anim) {
@@ -32,6 +45,25 @@
         let secondsleft = 10 - (sec%10);
         $('#nextmove').text(secondsleft);
         $('#seconds').text("second" + (secondsleft == 1 ? '' : 's'));
+        $('#move').text(boardposition == 8639 ? 'game' : 'move');
+
+        let pgn = '';
+        let startsan = 1;
+        let endsan = boardposition;
+        let showmoves = 7;
+        if (endsan > showmoves+1) {
+            startsan = endsan - showmoves;
+            pgn = '[...] ';
+        }
+        if (startsan % 2 == 0) // always start with a white move
+            startsan++;
+        for (let i = startsan; i <= endsan; i++) {
+            if (i % 2 == 1) { // move number before white move
+                pgn += Math.ceil(i/2) + ". ";
+            }
+            pgn += clock_sans[i] + " ";
+        }
+        $('#san').text(pgn);
     }
     redraw(false);
     window.setInterval(function() { redraw(true) }, 1000);
