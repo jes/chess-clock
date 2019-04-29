@@ -10,7 +10,7 @@
 <div class="container">
 <h1>Chess Clock</h1>
 
-<div style="float:left; border-right:solid 1px #ccc; padding-right:5px; margin-right:20px; max-width:505px">
+<div style="float:left; border-right:solid 1px #ccc; padding-right:5px; margin-right:20px; padding-bottom:20px">
 <span style="font-size:1.2em; font-weight:bold" id="hms"></span>
 <div id="board" style="width:500px"></div>
 <span id="san"></span><br>
@@ -18,11 +18,32 @@
 </div>
 
 <div>
-<p>This chess board is a clock. Each position uniquely encodes a time of day, to the nearest 10 seconds.</p>
+<p>This chess board is a clock. Each position uniquely encodes the time of day, to the nearest 10 seconds.</p>
 
-<p>Both players avoid bringing the game to an early conclusion, and the game encodes the entire 24 hour period, resetting
-to the starting position every day at 00:00:00.</p>
+<p>The game is a 4320-move marathon, ending at 23:59:50, and resetting to the starting position at 00:00:00
+to repeat the game the next day. It's a completely legal game. Some of the moves are pretty bad though.</p>
+
+<p><h4>What? The game can't possibly be that long</h4>
+Most chess games aren't this long because the players deliberately end it. Both players here deliberately <i>avoid</i> ending the game until the
+4320th turn.
+</p>
+
+<p><h4>What about draw by threefold repetition?</h4>
+If there were even twofold repetition, the board position would no longer uniquely encode each possible timestamp, so the players make
+sure they never repeat any position.</p>
+
+<p><h4>But what about the 50-move rule?</h4>
+The 50-move rule allows a player to <i>claim</i> a draw if the last 50 consecutive moves have been made by each player without the movement of any pawn and
+without the capture of any piece. Since both players want the game to continue, neither player claims a draw.</p>
+
+<p><h4>OK, what about the 75-move rule?</h4>
+After 75 consecutive moves without the movement of any pawn and without the capture of any piece, the game is drawn unless the last move was checkmate.
+To avoid this, they play exactly one pawn move or piece capture every 74th move, except in the opening where each player moves a pawn, and in the very
+closing stages where they make extra pawn moves and piece captures because they don't care any more.</p>
 </div>
+
+<hr>
+<p>By <a href="https://incoherency.co.uk/">James Stanley</a>.</p>
 
 </div>
 
