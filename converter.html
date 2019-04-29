@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+<title>Chess Clock Time Converter</title>
+<link rel="stylesheet" type="text/css" href="css/chessboard-0.3.0.min.css">
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div class="container">
+<h1>Chess Clock Time Converter</h1>
+
+<div style="float:left; border-right:solid 1px #ccc; padding-right:5px; margin-right:20px; padding-bottom:20px">
+<span style="font-size:1.2em; font-weight:bold" id="hms"></span>
+<span style="color:red" id="status"></span>
+<div id="board" style="width:500px"></div>
+<span id="san"></span><br>
+</div>
+
+<div>
+<p>This chess board is a clock. Each position uniquely encodes the time of day, to the nearest 10 seconds.</p>
+
+<p>(For more information, and for a live view of the clock, you can use the <a href="clock.html">Chess Clock</a> page).</p>
+
+<p>Enter a time, position ID, or FEN of the board position, and use the corresponding "Load" button to load the board position. Alternatively,
+use the editable chess board to recreate a position, and you'll get the time, position ID, and FEN.</p>
+
+Time: <input id="hms-input" type="text" placeholder="HH:MM:SS"><button class="btn btn-primary" id="load-hms">Load</button><br>
+<br>
+Position ID: <input id="id-input" type="text" placeholder="0..8639"><button class="btn btn-primary" id="load-id">Load</button><br>
+<br>
+FEN: <input id="fen-input" type="text" placeholder="FEN..."><button class="btn btn-primary" id="load-fen">Load</button><br>
+<br>
+<button class="btn btn-primary" id="current-time">Load from current time</button><br>
+<br>
+<button class="btn btn-primary" id="next">Next step</button>
+</div>
+
+<div style="clear:both"></div>
+<hr>
+<p>By <a href="https://incoherency.co.uk/">James Stanley</a>.</p>
+
+</div>
+
+<script src="js/jquery-3.4.0.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/chessboard-0.3.0.min.js"></script>
+<script src="js/fens.js"></script>
+<script src="js/sans.js"></script>
+<script type="text/javascript">
+    let currentpos;
+
+    $('#current-time').click(function() {
+        let now = new Date();
+        let hour = now.getHours();
+        let min = now.getMinutes();
+        let sec = now.getSeconds();
+        redraw(hms2id(hour,min,sec), true);
+    });
+
+    $('#load-hms').click(function() {
+        let parts = $('#hms-input').val().split(':');
+        parts.push(0); parts.push(0); parts.push(0); // XXX: make sure we have enough elements
+        let h = parseInt(parts[0]);
+        let m = parseInt(parts[1]);
+        let s = parseInt(parts[2]);
+
+        if (isNaN(h) || isNaN(m) || isNaN(s)) {
+            $('#status').text('Unrecognised time.');
+        } else {
+            redraw(hms2id(h,m,s), true);
+        }
+    });
+
+    $('#load-id').click(function() {
+        let id = parseInt($('#id-input').val()) % 8640;
+        redraw(id, true);
+    });
+
+    $('#next').click(function() {
+        redraw(currentpos+1, true);
+    });
+
+    let board = ChessBoard('board', {
+        draggable: true,
+        dropOffBoard: 'trash',
+        sparePieces: true,
+        onDrop: function(source, target, piece, newpos, oldpos, orientation) {
+            let id = fen2id(ChessBoard.objToFen(newpos));
+            if (id >= 0) {
+                redraw(fen2id(ChessBoard.objToFen(newpos)), false);
+            } else {
+                $('#status').text("Unrecognised board position.");
+            }
+        },
+    });
+
+    function fen2id(fen) {
+        for (let i = 0; i < clock_fens.length; i++) {
+            if (clock_fens[i].startsWith(fen))
+                return i;
+        }
+        return -1;
+    }
+
+    function hms2id(h,m,s) {
+        let secsinday = h*3600 + m*60 + s;
+        return Math.floor(secsinday/10) % clock_fens.length;
+    }
+
+    function redraw(boardposition, use_anim) {
+        currentpos = boardposition;
+        board.position(clock_fens[boardposition], use_anim);
+
+        let allsecs = boardposition*10;
+        let hour = Math.floor(allsecs/3600);
+        allsecs %= 3600;
+        let min = Math.floor(allsecs/60);
+        allsecs %= 60;
+        let sec = allsecs;
+
+        $('#hms').text(pad(hour,2) + ":" + pad(min,2) + ":" + Math.floor(sec/10) + "0");
+        $('#hms-input').val(pad(hour,2) + ":" + pad(min,2) + ":" + Math.floor(sec/10) + "0");
+        $('#id-input').val(boardposition);
+        $('#fen-input').val(board.fen());
+        let secondsleft = 10 - (sec%10);
+
+        let pgn = '';
+        let startsan = 1;
+        let endsan = boardposition;
+        let showmoves = 7;
+        if (endsan > showmoves+1) {
+            startsan = endsan - showmoves;
+            pgn = '[...] ';
+        }
+        if (startsan % 2 == 0) // always start with a white move
+            startsan++;
+        for (let i = startsan; i <= endsan; i++) {
+            if (i % 2 == 1) { // move number before white move
+                pgn += Math.ceil(i/2) + ". ";
+            }
+            pgn += clock_sans[i] + " ";
+        }
+        $('#san').text(pgn);
+        $('#status').text('');
+    }
+
+    $('#current-time').click();
+
+    // https://stackoverflow.com/a/10073788
+    function pad(n, width, z) {
+      z = z || '0';
+      n = n + '';
+      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+    }
+</script>
+</body>
+</html>
