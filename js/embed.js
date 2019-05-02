@@ -1,7 +1,13 @@
-function EmbedChessClock(div_id, width) {
+function EmbedChessClock(div_id, width, piece_theme) {
     $('#' + div_id).html("<span style=\"font-size:1.2em;font-weight:bold\" id=\"" + div_id + "-hms\"></span><div id=\"" + div_id + "-board\" style=\"width:" + width + "\"></div><span id=\"" + div_id + "-san\"></span><br>(next <span id=\"" + div_id + "-move\"></span> in <b id=\"" + div_id + "-nextmove\"></b> <span id=\"" + div_id + "-seconds\"></span>)");
 
-    let board = ChessBoard(div_id + '-board', 'start');
+    if (!piece_theme)
+        piece_theme = '/img/chesspieces/wikipedia/{piece}.png';
+
+    let board = ChessBoard(div_id + '-board', {
+        position: 'start',
+        piecetheme: piece_theme,
+    });
     function redraw(use_anim) {
         let now = new Date();
         let hour = now.getHours();
