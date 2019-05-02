@@ -6,7 +6,7 @@ function EmbedChessClock(div_id, width, piece_theme) {
 
     let board = ChessBoard(div_id + '-board', {
         position: 'start',
-        piecetheme: piece_theme,
+        pieceTheme: piece_theme,
     });
     function redraw(use_anim) {
         let now = new Date();
