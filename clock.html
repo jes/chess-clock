@@ -11,13 +11,11 @@
 <h1>Chess Clock</h1>
 
 <div style="float:left; border-right:solid 1px #ccc; padding-right:5px; margin-right:20px; padding-bottom:20px">
-<span style="font-size:1.2em; font-weight:bold" id="hms"></span>
-<div id="board" style="width:500px"></div>
-<span id="san"></span><br>
-(next <span id="move"></span> in <span style="font-weight: bold" id="nextmove"></span> <span id="seconds"></span>)
+<div id="chessclock"></div>
 </div>
 
 <div>
+
 <p>This chess board is a clock. Each position uniquely encodes the time of day, to the nearest 10 seconds.</p>
 
 <p>The game is a 4320-move marathon, ending at 23:59:50, and resetting to the starting position at 00:00:00
@@ -55,50 +53,9 @@ closing stages where they make extra pawn moves and piece captures because they 
 <script src="js/chessboard-0.3.0.min.js"></script>
 <script src="js/fens.js"></script>
 <script src="js/sans.js"></script>
+<script src="js/embed.js"></script>
 <script type="text/javascript">
-    let board = ChessBoard('board', 'start');
-    function redraw(use_anim) {
-        let now = new Date();
-        let hour = now.getHours();
-        let min = now.getMinutes();
-        let sec = now.getSeconds();
-        let secsinday = hour*3600 + min*60 + sec;
-        let boardposition = Math.floor(secsinday/10) % clock_fens.length;
-        board.position(clock_fens[boardposition], use_anim);
-
-        $('#hms').text(pad(hour,2) + ":" + pad(min,2) + ":" + Math.floor(sec/10) + "0");
-        let secondsleft = 10 - (sec%10);
-        $('#nextmove').text(secondsleft);
-        $('#seconds').text("second" + (secondsleft == 1 ? '' : 's'));
-        $('#move').text(boardposition == 8639 ? 'game' : 'move');
-
-        let pgn = '';
-        let startsan = 1;
-        let endsan = boardposition;
-        let showmoves = 7;
-        if (endsan > showmoves+1) {
-            startsan = endsan - showmoves;
-            pgn = '[...] ';
-        }
-        if (startsan % 2 == 0) // always start with a white move
-            startsan++;
-        for (let i = startsan; i <= endsan; i++) {
-            if (i % 2 == 1) { // move number before white move
-                pgn += Math.ceil(i/2) + ". ";
-            }
-            pgn += clock_sans[i] + " ";
-        }
-        $('#san').text(pgn);
-    }
-    redraw(false);
-    window.setInterval(function() { redraw(true) }, 1000);
-
-    // https://stackoverflow.com/a/10073788
-    function pad(n, width, z) {
-      z = z || '0';
-      n = n + '';
-      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-    }
+    EmbedChessClock('chessclock', '500px');
 </script>
 </body>
 </html>

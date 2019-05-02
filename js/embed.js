@@ -1,25 +1,7 @@
-<!doctype html>
-<html>
-<head>
-<title>Chess Clock</title>
-<link rel="stylesheet" type="text/css" href="css/chessboard-0.3.0.min.css">
-<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
+function EmbedChessClock(div_id, width) {
+    $('#' + div_id).html("<span style=\"font-size:1.2em;font-weight:bold\" id=\"" + div_id + "-hms\"></span><div id=\"" + div_id + "-board\" style=\"width:" + width + "\"></div><span id=\"" + div_id + "-san\"></span><br>(next <span id=\"" + div_id + "-move\"></span> in <b id=\"" + div_id + "-nextmove\"></b> <span id=\"" + div_id + "-seconds\"></span>)");
 
-<span style="font-size:1.2em; font-weight:bold" id="hms"></span>
-<div id="board" style="width:300px"></div>
-<span id="san"></span><br>
-(next <span id="move"></span> in <span style="font-weight: bold" id="nextmove"></span> <span id="seconds"></span>)
-
-<script src="js/jquery-3.4.0.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script src="js/chessboard-0.3.0.min.js"></script>
-<script src="js/fens.js"></script>
-<script src="js/sans.js"></script>
-<script type="text/javascript">
-    let board = ChessBoard('board', 'start');
+    let board = ChessBoard(div_id + '-board', 'start');
     function redraw(use_anim) {
         let now = new Date();
         let hour = now.getHours();
@@ -29,11 +11,11 @@
         let boardposition = Math.floor(secsinday/10) % clock_fens.length;
         board.position(clock_fens[boardposition], use_anim);
 
-        $('#hms').text(pad(hour,2) + ":" + pad(min,2) + ":" + Math.floor(sec/10) + "0");
+        $('#' + div_id + '-hms').text(pad(hour,2) + ":" + pad(min,2) + ":" + Math.floor(sec/10) + "0");
         let secondsleft = 10 - (sec%10);
-        $('#nextmove').text(secondsleft);
-        $('#seconds').text("second" + (secondsleft == 1 ? '' : 's'));
-        $('#move').text(boardposition == 8639 ? 'game' : 'move');
+        $('#' + div_id + '-nextmove').text(secondsleft);
+        $('#' + div_id + '-seconds').text("second" + (secondsleft == 1 ? '' : 's'));
+        $('#' + div_id + '-move').text(boardposition == 8639 ? 'game' : 'move');
 
         let pgn = '';
         let startsan = 1;
@@ -51,7 +33,7 @@
             }
             pgn += clock_sans[i] + " ";
         }
-        $('#san').text(pgn);
+        $('#' + div_id + '-san').text(pgn);
     }
     redraw(false);
     window.setInterval(function() { redraw(true) }, 1000);
@@ -62,6 +44,4 @@
       n = n + '';
       return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
     }
-</script>
-</body>
-</html>
+}
